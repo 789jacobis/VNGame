@@ -1,0 +1,9 @@
+﻿id,speaker,text,bg,leftChar,centerChar,rightChar,bgm,sfx,command,next
+prologue_001,零,"哥哥，你回來了？",kitchen_night,,rei_smile,,daily_theme,,,prologue_002
+prologue_002,主角,"嗯，今天有點累。",kitchen_night,,rei_smile,,,,,prologue_003
+prologue_003,零,"那就先坐一下吧。我剛好也想測試這套 AVG 對話系統。",kitchen_night,,rei_happy,,,,,prologue_004
+prologue_004,主角,"所以現在可以逐字顯示、Auto、Skip、Log，還可以存讀檔？",kitchen_night,,rei_happy,,,,,prologue_005
+prologue_005,零,"對。右下角的小按鈕也都先接好了，只是美術還是 placeholder。",kitchen_night,,rei_smile,,,,,prologue_006
+prologue_006,零,"之後如果要加入地圖、任務、金錢或角色數值，就會接在 GameState 和 GameFlow 上。",kitchen_night,,rei_serious,,,,,prologue_007
+prologue_007,主角,"聽起來是能慢慢長大的架構。",kitchen_night,,rei_smile,,,,,prologue_008
+prologue_008,零,"嗯。現在先把普通視覺小說的核心打穩。",kitchen_night,,rei_happy,,,,,
