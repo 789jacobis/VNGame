@@ -53,18 +53,32 @@ namespace VNGame
         {
             var mouse = Mouse.current;
             var keyboard = Keyboard.current;
+            var rightMousePressed = mouse != null && mouse.rightButton.wasPressedThisFrame;
+            var leftMousePressed = mouse != null && mouse.leftButton.wasPressedThisFrame;
 
-            if ((mouse != null && mouse.rightButton.wasPressedThisFrame) || WasPressed(keyboard?.escapeKey))
+            if (rightMousePressed || WasPressed(keyboard?.escapeKey))
             {
+                if (rightMousePressed && mode == GameMode.Novel && overlay == OverlayMode.None && StopAutoOrSkip())
+                {
+                    return;
+                }
+
                 Back();
                 return;
             }
 
             if (mode == GameMode.Novel && overlay == OverlayMode.None)
             {
-                if ((mouse != null && mouse.leftButton.wasPressedThisFrame && !IsPointerOverInteractiveUi()) ||
-                    WasPressed(keyboard?.spaceKey) ||
-                    WasPressed(keyboard?.enterKey))
+                if (leftMousePressed && !IsPointerOverInteractiveUi())
+                {
+                    if (StopAutoOrSkip())
+                    {
+                        return;
+                    }
+
+                    RevealDialogueOrAdvance();
+                }
+                else if (WasPressed(keyboard?.spaceKey) || WasPressed(keyboard?.enterKey))
                 {
                     RevealDialogueOrAdvance();
                 }
@@ -303,6 +317,20 @@ namespace VNGame
 
             autoTimer = 0f;
             UpdateStatus();
+        }
+
+        private bool StopAutoOrSkip()
+        {
+            if (!autoMode && !skipMode)
+            {
+                return false;
+            }
+
+            autoMode = false;
+            skipMode = false;
+            autoTimer = 0f;
+            UpdateStatus();
+            return true;
         }
 
         private void UpdateStatus()
