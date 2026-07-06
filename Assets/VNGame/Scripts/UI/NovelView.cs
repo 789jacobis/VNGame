@@ -122,6 +122,10 @@ namespace VNGame
 
             image.sprite = sprite;
             image.enabled = visible && sprite != null;
+            if (image.enabled)
+            {
+                image.color = Color.white;
+            }
         }
 
         private static void SetVisible(Graphic graphic, bool visible)

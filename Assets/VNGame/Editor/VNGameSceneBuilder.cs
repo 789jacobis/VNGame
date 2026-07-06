@@ -282,11 +282,11 @@ namespace VNGame.EditorTools
             view.debugLineText = CreateText("DebugLineText", root.transform, "", 24, TextAnchor.MiddleLeft, Color.white);
             SetRect(view.debugLineText.rectTransform, new Vector2(24, -24), new Vector2(600, 40), new Vector2(0, 1));
 
-            view.leftCharacterImage = CreatePanel("LeftCharacterImage", root.transform, new Color(1f, 1f, 1f, 0f));
+            view.leftCharacterImage = CreatePanel("LeftCharacterImage", root.transform, Color.white);
             SetRect(view.leftCharacterImage.rectTransform, new Vector2(280, 180), new Vector2(520, 720), new Vector2(0, 0));
-            view.centerCharacterImage = CreatePanel("CenterCharacterImage", root.transform, new Color(1f, 1f, 1f, 0f));
+            view.centerCharacterImage = CreatePanel("CenterCharacterImage", root.transform, Color.white);
             SetRect(view.centerCharacterImage.rectTransform, new Vector2(700, 180), new Vector2(520, 720), new Vector2(0, 0));
-            view.rightCharacterImage = CreatePanel("RightCharacterImage", root.transform, new Color(1f, 1f, 1f, 0f));
+            view.rightCharacterImage = CreatePanel("RightCharacterImage", root.transform, Color.white);
             SetRect(view.rightCharacterImage.rectTransform, new Vector2(1120, 180), new Vector2(520, 720), new Vector2(0, 0));
             view.leftCharacterImage.preserveAspect = true;
             view.centerCharacterImage.preserveAspect = true;
