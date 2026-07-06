@@ -66,7 +66,7 @@ namespace VNGame
                     WasPressed(keyboard?.spaceKey) ||
                     WasPressed(keyboard?.enterKey))
                 {
-                    AdvanceNovel();
+                    RevealDialogueOrAdvance();
                 }
 
                 if (WasPressed(keyboard?.aKey))
@@ -256,6 +256,17 @@ namespace VNGame
 
             ShowLine(next);
             autoTimer = 0f;
+        }
+
+        private void RevealDialogueOrAdvance()
+        {
+            if (!novelView.IsDialogueVisible())
+            {
+                novelView.SetDialogueVisible(true);
+                return;
+            }
+
+            AdvanceNovel();
         }
 
         private void CompleteTyping()
