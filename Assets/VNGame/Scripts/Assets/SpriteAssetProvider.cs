@@ -15,7 +15,9 @@ namespace VNGame
     {
         public Sprite fallbackBackground;
         public Sprite fallbackCharacter;
+        [Tooltip("Editor tools populate this from Assets/VNGame/Art/Backgrounds. Keys use folder paths without extensions, for example School/classroom_day.")]
         public List<SpriteBinding> backgrounds = new List<SpriteBinding>();
+        [Tooltip("Editor tools populate this from Assets/VNGame/Art/Characters. Keys use folder paths without extensions, for example Rei/happy.")]
         public List<SpriteBinding> characters = new List<SpriteBinding>();
 
         public Sprite GetBackground(string key)
@@ -30,11 +32,12 @@ namespace VNGame
 
         private static Sprite FindSprite(List<SpriteBinding> bindings, string key, Sprite fallback)
         {
+            key = NormalizeKey(key);
             if (!string.IsNullOrWhiteSpace(key))
             {
                 foreach (var binding in bindings)
                 {
-                    if (binding != null && binding.key == key)
+                    if (binding != null && NormalizeKey(binding.key) == key)
                     {
                         return binding.sprite != null ? binding.sprite : fallback;
                     }
@@ -42,6 +45,11 @@ namespace VNGame
             }
 
             return fallback;
+        }
+
+        private static string NormalizeKey(string key)
+        {
+            return string.IsNullOrWhiteSpace(key) ? string.Empty : key.Trim().Replace('\\', '/');
         }
     }
 }

@@ -15,14 +15,36 @@
 | id | 對話列唯一 ID。存檔會記住目前 line id。 |
 | speaker | 說話者名稱。 |
 | text | 台詞內容。CSV 中可用引號包住中文、逗號、換行。 |
-| bg | 背景 key。第一版會用 key 產生 placeholder 顏色，之後可接 Addressables。 |
-| leftChar | 左側立繪 key，預留。 |
-| centerChar | 中央立繪 key，目前會顯示成 placeholder 文字。 |
-| rightChar | 右側立繪 key，預留。 |
+| bg | 背景 key。對應 `Assets/VNGame/Art/Backgrounds` 底下的路徑，不含副檔名。 |
+| leftChar | 左側立繪 key。對應 `Assets/VNGame/Art/Characters` 底下的路徑，不含副檔名。 |
+| centerChar | 中央立繪 key。對應 `Assets/VNGame/Art/Characters` 底下的路徑，不含副檔名。 |
+| rightChar | 右側立繪 key。對應 `Assets/VNGame/Art/Characters` 底下的路徑，不含副檔名。 |
 | bgm | BGM key，預留。 |
 | sfx | 音效 key，預留。 |
 | command | 指令欄，預留給 choice/jump/set 等劇情指令。 |
 | next | 下一列 id。空白時會照表格順序往下。 |
+
+## Visual Assets
+
+角色立繪放在：
+
+`Assets/VNGame/Art/Characters/{CharacterOrGroup}/{pose}.png`
+
+劇本中填入相對於 `Characters` 的路徑，不含副檔名。例如：
+
+| 檔案 | 劇本 key |
+| --- | --- |
+| `Assets/VNGame/Art/Characters/Rei/happy.png` | `Rei/happy` |
+| `Assets/VNGame/Art/Characters/Rei/serious.png` | `Rei/serious` |
+| `Assets/VNGame/Art/Characters/Demo/center.png` | `Demo/center` |
+
+目前測試用三個暫用立繪位於：
+
+- `Assets/VNGame/Art/Characters/Demo/left.png`
+- `Assets/VNGame/Art/Characters/Demo/center.png`
+- `Assets/VNGame/Art/Characters/Demo/right.png`
+
+在 Unity 裡執行 `VNGame > Build View Scene` 時，SceneBuilder 會掃描 `Characters` 和 `Backgrounds` 資料夾，自動把 Sprite 建成 key-to-sprite 綁定。正式立繪只要依照資料夾規則放好，劇本填對 key，不需要手動在 Inspector 拖一大串圖。
 
 ## Implemented Controls
 

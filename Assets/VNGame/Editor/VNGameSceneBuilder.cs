@@ -15,10 +15,13 @@ namespace VNGame.EditorTools
         private const string ScenePath = "Assets/Scenes/VNGameScene.unity";
         private const string PrefabFolder = "Assets/VNGame/Prefabs";
         private const string SaveSlotPrefabPath = PrefabFolder + "/SaveSlotView.prefab";
-        private const string PlaceholderFolder = "Assets/VNGame/Art/Placeholders";
-        private const string LeftSpritePath = PlaceholderFolder + "/placeholder_character_left.png";
-        private const string CenterSpritePath = PlaceholderFolder + "/placeholder_character_center.png";
-        private const string RightSpritePath = PlaceholderFolder + "/placeholder_character_right.png";
+        private const string ArtFolder = "Assets/VNGame/Art";
+        private const string BackgroundRootFolder = ArtFolder + "/Backgrounds";
+        private const string CharacterRootFolder = ArtFolder + "/Characters";
+        private const string DemoCharacterFolder = CharacterRootFolder + "/Demo";
+        private const string LeftSpritePath = DemoCharacterFolder + "/left.png";
+        private const string CenterSpritePath = DemoCharacterFolder + "/center.png";
+        private const string RightSpritePath = DemoCharacterFolder + "/right.png";
 
         [InitializeOnLoadMethod]
         private static void AutoBuildSceneOnce()
@@ -30,7 +33,8 @@ namespace VNGame.EditorTools
                     return;
                 }
 
-                if (!File.Exists(ScenePath) || !File.ReadAllText(ScenePath).Contains("HideButton"))
+                var sceneContent = File.Exists(ScenePath) ? File.ReadAllText(ScenePath) : string.Empty;
+                if (string.IsNullOrEmpty(sceneContent) || !sceneContent.Contains("HideButton") || !sceneContent.Contains("Demo/center"))
                 {
                     BuildViewScene();
                 }
@@ -41,9 +45,13 @@ namespace VNGame.EditorTools
         public static void BuildViewScene()
         {
             EnsureFolders();
-            var leftSprite = EnsurePlaceholderSprite(LeftSpritePath, new Color32(255, 128, 150, 255));
+            EnsurePlaceholderSprite(LeftSpritePath, new Color32(255, 128, 150, 255));
             var centerSprite = EnsurePlaceholderSprite(CenterSpritePath, new Color32(128, 190, 255, 255));
-            var rightSprite = EnsurePlaceholderSprite(RightSpritePath, new Color32(150, 235, 160, 255));
+            EnsurePlaceholderSprite(RightSpritePath, new Color32(150, 235, 160, 255));
+            EnsureSpritesInFolder(BackgroundRootFolder);
+            EnsureSpritesInFolder(CharacterRootFolder);
+            AssetDatabase.Refresh();
+
             var saveSlotPrefab = BuildSaveSlotPrefab();
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
@@ -52,14 +60,8 @@ namespace VNGame.EditorTools
             var spriteProvider = root.AddComponent<SpriteAssetProvider>();
             controller.spriteProvider = spriteProvider;
             spriteProvider.fallbackCharacter = centerSprite;
-            spriteProvider.characters = new List<SpriteBinding>
-            {
-                new SpriteBinding { key = "left_demo", sprite = leftSprite },
-                new SpriteBinding { key = "rei_smile", sprite = centerSprite },
-                new SpriteBinding { key = "rei_happy", sprite = centerSprite },
-                new SpriteBinding { key = "rei_serious", sprite = centerSprite },
-                new SpriteBinding { key = "right_demo", sprite = rightSprite }
-            };
+            spriteProvider.backgrounds = BuildSpriteBindings(BackgroundRootFolder);
+            spriteProvider.characters = BuildSpriteBindings(CharacterRootFolder);
 
             var canvas = CreateCanvas(root.transform);
             var mainMenu = BuildMainMenu(canvas.transform);
@@ -104,14 +106,75 @@ namespace VNGame.EditorTools
                 AssetDatabase.CreateFolder("Assets/VNGame", "Prefabs");
             }
 
-            if (!AssetDatabase.IsValidFolder("Assets/VNGame/Art"))
+            if (!AssetDatabase.IsValidFolder(ArtFolder))
             {
                 AssetDatabase.CreateFolder("Assets/VNGame", "Art");
             }
 
-            if (!AssetDatabase.IsValidFolder(PlaceholderFolder))
+            if (!AssetDatabase.IsValidFolder(BackgroundRootFolder))
             {
-                AssetDatabase.CreateFolder("Assets/VNGame/Art", "Placeholders");
+                AssetDatabase.CreateFolder(ArtFolder, "Backgrounds");
+            }
+
+            if (!AssetDatabase.IsValidFolder(CharacterRootFolder))
+            {
+                AssetDatabase.CreateFolder(ArtFolder, "Characters");
+            }
+
+            if (!AssetDatabase.IsValidFolder(DemoCharacterFolder))
+            {
+                AssetDatabase.CreateFolder(CharacterRootFolder, "Demo");
+            }
+        }
+
+        private static List<SpriteBinding> BuildSpriteBindings(string rootFolder)
+        {
+            var bindings = new List<SpriteBinding>();
+            if (!AssetDatabase.IsValidFolder(rootFolder))
+            {
+                return bindings;
+            }
+
+            var guids = AssetDatabase.FindAssets("t:Sprite", new[] { rootFolder });
+            foreach (var guid in guids)
+            {
+                var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+                if (sprite == null)
+                {
+                    continue;
+                }
+
+                var key = assetPath.Substring(rootFolder.Length).TrimStart('/');
+                key = Path.ChangeExtension(key, null).Replace('\\', '/');
+                bindings.Add(new SpriteBinding { key = key, sprite = sprite });
+            }
+
+            bindings.Sort((a, b) => string.CompareOrdinal(a.key, b.key));
+            return bindings;
+        }
+
+        private static void EnsureSpritesInFolder(string rootFolder)
+        {
+            if (!AssetDatabase.IsValidFolder(rootFolder))
+            {
+                return;
+            }
+
+            var guids = AssetDatabase.FindAssets("t:Texture2D", new[] { rootFolder });
+            foreach (var guid in guids)
+            {
+                var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+                if (importer == null || importer.textureType == TextureImporterType.Sprite)
+                {
+                    continue;
+                }
+
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.alphaIsTransparency = true;
+                importer.SaveAndReimport();
             }
         }
 
