@@ -14,8 +14,10 @@ namespace VNGame
         public Text dialogueText;
         public Text statusText;
         public Text debugLineText;
+        public GameObject dialogueGroup;
 
         public Button logButton;
+        public Button hideButton;
         public Button quickSaveButton;
         public Button quickLoadButton;
         public Button saveButton;
@@ -26,6 +28,7 @@ namespace VNGame
         public Button skipButton;
 
         public event Action LogRequested;
+        public event Action HideRequested;
         public event Action QuickSaveRequested;
         public event Action QuickLoadRequested;
         public event Action SaveRequested;
@@ -38,6 +41,7 @@ namespace VNGame
         private void Awake()
         {
             Bind(logButton, () => LogRequested?.Invoke());
+            Bind(hideButton, () => HideRequested?.Invoke());
             Bind(quickSaveButton, () => QuickSaveRequested?.Invoke());
             Bind(quickLoadButton, () => QuickLoadRequested?.Invoke());
             Bind(saveButton, () => SaveRequested?.Invoke());
@@ -92,6 +96,23 @@ namespace VNGame
             }
         }
 
+        public void SetDialogueVisible(bool visible)
+        {
+            if (dialogueGroup != null)
+            {
+                dialogueGroup.SetActive(visible);
+                return;
+            }
+
+            SetVisible(speakerText, visible);
+            SetVisible(dialogueText, visible);
+        }
+
+        public bool IsDialogueVisible()
+        {
+            return dialogueGroup == null || dialogueGroup.activeSelf;
+        }
+
         private static void SetImage(Image image, Sprite sprite, bool visible)
         {
             if (image == null)
@@ -101,6 +122,14 @@ namespace VNGame
 
             image.sprite = sprite;
             image.enabled = visible && sprite != null;
+        }
+
+        private static void SetVisible(Graphic graphic, bool visible)
+        {
+            if (graphic != null)
+            {
+                graphic.enabled = visible;
+            }
         }
 
         private static void Bind(Button button, Action action)

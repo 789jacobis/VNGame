@@ -1,4 +1,5 @@
 using System.IO;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -14,6 +15,10 @@ namespace VNGame.EditorTools
         private const string ScenePath = "Assets/Scenes/VNGameScene.unity";
         private const string PrefabFolder = "Assets/VNGame/Prefabs";
         private const string SaveSlotPrefabPath = PrefabFolder + "/SaveSlotView.prefab";
+        private const string PlaceholderFolder = "Assets/VNGame/Art/Placeholders";
+        private const string LeftSpritePath = PlaceholderFolder + "/placeholder_character_left.png";
+        private const string CenterSpritePath = PlaceholderFolder + "/placeholder_character_center.png";
+        private const string RightSpritePath = PlaceholderFolder + "/placeholder_character_right.png";
 
         [InitializeOnLoadMethod]
         private static void AutoBuildSceneOnce()
@@ -25,7 +30,7 @@ namespace VNGame.EditorTools
                     return;
                 }
 
-                if (!File.Exists(ScenePath))
+                if (!File.Exists(ScenePath) || !File.ReadAllText(ScenePath).Contains("HideButton"))
                 {
                     BuildViewScene();
                 }
@@ -36,6 +41,9 @@ namespace VNGame.EditorTools
         public static void BuildViewScene()
         {
             EnsureFolders();
+            var leftSprite = EnsurePlaceholderSprite(LeftSpritePath, new Color32(255, 128, 150, 255));
+            var centerSprite = EnsurePlaceholderSprite(CenterSpritePath, new Color32(128, 190, 255, 255));
+            var rightSprite = EnsurePlaceholderSprite(RightSpritePath, new Color32(150, 235, 160, 255));
             var saveSlotPrefab = BuildSaveSlotPrefab();
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
@@ -43,6 +51,15 @@ namespace VNGame.EditorTools
             var controller = root.AddComponent<VNGameController>();
             var spriteProvider = root.AddComponent<SpriteAssetProvider>();
             controller.spriteProvider = spriteProvider;
+            spriteProvider.fallbackCharacter = centerSprite;
+            spriteProvider.characters = new List<SpriteBinding>
+            {
+                new SpriteBinding { key = "left_demo", sprite = leftSprite },
+                new SpriteBinding { key = "rei_smile", sprite = centerSprite },
+                new SpriteBinding { key = "rei_happy", sprite = centerSprite },
+                new SpriteBinding { key = "rei_serious", sprite = centerSprite },
+                new SpriteBinding { key = "right_demo", sprite = rightSprite }
+            };
 
             var canvas = CreateCanvas(root.transform);
             var mainMenu = BuildMainMenu(canvas.transform);
@@ -86,6 +103,46 @@ namespace VNGame.EditorTools
             {
                 AssetDatabase.CreateFolder("Assets/VNGame", "Prefabs");
             }
+
+            if (!AssetDatabase.IsValidFolder("Assets/VNGame/Art"))
+            {
+                AssetDatabase.CreateFolder("Assets/VNGame", "Art");
+            }
+
+            if (!AssetDatabase.IsValidFolder(PlaceholderFolder))
+            {
+                AssetDatabase.CreateFolder("Assets/VNGame/Art", "Placeholders");
+            }
+        }
+
+        private static Sprite EnsurePlaceholderSprite(string path, Color32 color)
+        {
+            if (!File.Exists(path))
+            {
+                var texture = new Texture2D(256, 768, TextureFormat.RGBA32, false);
+                var pixels = new Color32[256 * 768];
+                for (var i = 0; i < pixels.Length; i++)
+                {
+                    pixels[i] = color;
+                }
+
+                texture.SetPixels32(pixels);
+                texture.Apply();
+                File.WriteAllBytes(path, texture.EncodeToPNG());
+                Object.DestroyImmediate(texture);
+                AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+            }
+
+            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer != null)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.alphaIsTransparency = true;
+                importer.SaveAndReimport();
+            }
+
+            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
         }
 
         private static SaveSlotView BuildSaveSlotPrefab()
@@ -168,9 +225,13 @@ namespace VNGame.EditorTools
             SetRect(view.centerCharacterImage.rectTransform, new Vector2(700, 180), new Vector2(520, 720), new Vector2(0, 0));
             view.rightCharacterImage = CreatePanel("RightCharacterImage", root.transform, new Color(1f, 1f, 1f, 0f));
             SetRect(view.rightCharacterImage.rectTransform, new Vector2(1120, 180), new Vector2(520, 720), new Vector2(0, 0));
+            view.leftCharacterImage.preserveAspect = true;
+            view.centerCharacterImage.preserveAspect = true;
+            view.rightCharacterImage.preserveAspect = true;
 
             var dialogueBox = CreatePanel("DialogueBox", root.transform, new Color(0.08f, 0.1f, 0.14f, 0.86f));
             SetRect(dialogueBox.rectTransform, new Vector2(210, 126), new Vector2(1500, 210), new Vector2(0, 0));
+            view.dialogueGroup = dialogueBox.gameObject;
             view.speakerText = CreateText("SpeakerText", dialogueBox.transform, "", 32, TextAnchor.MiddleLeft, new Color(0.72f, 0.86f, 1f));
             SetRect(view.speakerText.rectTransform, new Vector2(34, -18), new Vector2(500, 54), new Vector2(0, 1));
             view.dialogueText = CreateText("DialogueText", dialogueBox.transform, "", 34, TextAnchor.UpperLeft, Color.white);
@@ -181,20 +242,21 @@ namespace VNGame.EditorTools
             view.autoButton = CreateButton(root.transform, "AutoButton", "Auto", new Vector2(36, 42), new Vector2(92, 44), new Vector2(0, 0));
             view.skipButton = CreateButton(root.transform, "SkipButton", "Skip", new Vector2(138, 42), new Vector2(92, 44), new Vector2(0, 0));
 
-            var labels = new[] { "Log", "Q.Save", "Q.Load", "Save", "Load", "設定", "主選單" };
+            var labels = new[] { "Log", "Hide", "Q.Save", "Q.Load", "Save", "Load", "設定", "主選單" };
             var buttons = new Button[labels.Length];
             for (var i = 0; i < labels.Length; i++)
             {
-                buttons[i] = CreateButton(root.transform, labels[i].Replace(".", "") + "Button", labels[i], new Vector2(915 + i * 132, 42), new Vector2(118, 44), new Vector2(0, 0));
+                buttons[i] = CreateButton(root.transform, labels[i].Replace(".", "") + "Button", labels[i], new Vector2(820 + i * 124, 42), new Vector2(108, 44), new Vector2(0, 0));
             }
 
             view.logButton = buttons[0];
-            view.quickSaveButton = buttons[1];
-            view.quickLoadButton = buttons[2];
-            view.saveButton = buttons[3];
-            view.loadButton = buttons[4];
-            view.settingsButton = buttons[5];
-            view.mainMenuButton = buttons[6];
+            view.hideButton = buttons[1];
+            view.quickSaveButton = buttons[2];
+            view.quickLoadButton = buttons[3];
+            view.saveButton = buttons[4];
+            view.loadButton = buttons[5];
+            view.settingsButton = buttons[6];
+            view.mainMenuButton = buttons[7];
             return view;
         }
 

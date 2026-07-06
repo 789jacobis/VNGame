@@ -41,6 +41,26 @@ VNGameRoot
 
 因此可以直接在 Inspector 對 `Image.sprite` 拖入正式素材。現在仍是 placeholder 色塊，但已經是可替換 sprite 的 Unity 物件。
 
+## Novel Controls
+
+- 右鍵 / Esc：只關閉目前 overlay；遊戲進行中不會直接退回主選單。
+- Hide：隱藏或顯示對話框，不影響角色立繪和背景。
+- 左/中/右三個立繪 Image 會使用 placeholder sprite，確認同一畫面最多三人同屏的版面。
+
+## Placeholder Sprites
+
+目前提供三張臨時長方形人物立繪：
+
+- `Assets/VNGame/Art/Placeholders/placeholder_character_left.png`
+- `Assets/VNGame/Art/Placeholders/placeholder_character_center.png`
+- `Assets/VNGame/Art/Placeholders/placeholder_character_right.png`
+
+範例劇本 `prologue.csv` 使用：
+
+- `left_demo`
+- `rei_smile` / `rei_happy` / `rei_serious`
+- `right_demo`
+
 ## Script Layout
 
 ```text

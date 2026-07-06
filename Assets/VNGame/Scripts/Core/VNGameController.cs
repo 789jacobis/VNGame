@@ -106,6 +106,7 @@ namespace VNGame
             if (novelView != null)
             {
                 novelView.LogRequested += ShowBacklog;
+                novelView.HideRequested += ToggleDialogueVisibility;
                 novelView.QuickSaveRequested += () => StartCoroutine(QuickSave());
                 novelView.QuickLoadRequested += QuickLoadLatest;
                 novelView.SaveRequested += () => ShowSaveLoad(true, false);
@@ -175,6 +176,8 @@ namespace VNGame
 
         private void ShowLine(DialogueLine line)
         {
+            novelView.SetDialogueVisible(true);
+
             if (line == null)
             {
                 visibleFullText = "劇本已結束。";
@@ -293,7 +296,17 @@ namespace VNGame
 
         private void UpdateStatus()
         {
-            novelView.SetStatus($"Auto: {(autoMode ? "ON" : "OFF")}    Skip: {(skipMode ? "ON" : "OFF")}    Right Click/Esc: Back");
+            novelView.SetStatus($"Auto: {(autoMode ? "ON" : "OFF")}    Skip: {(skipMode ? "ON" : "OFF")}    Right Click/Esc: Close");
+        }
+
+        private void ToggleDialogueVisibility()
+        {
+            if (mode != GameMode.Novel || overlay != OverlayMode.None)
+            {
+                return;
+            }
+
+            novelView.SetDialogueVisible(!novelView.IsDialogueVisible());
         }
 
         private void ShowSaveLoad(bool saveMode, bool quickPage)
@@ -448,9 +461,9 @@ namespace VNGame
                 return;
             }
 
-            if (mode == GameMode.Novel)
+            if (mode == GameMode.Novel && !novelView.IsDialogueVisible())
             {
-                ShowMainMenu();
+                novelView.SetDialogueVisible(true);
             }
         }
 
